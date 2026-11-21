@@ -1,9 +1,9 @@
-import {aesKey,unseal,passwordKey,objectRequest} from './oss.mjs'
+import {bucket,aesKey,unseal,passwordKey,objectRequest} from './oss.mjs'
 const $=id=>document.getElementById(id)
 const bytes=s=>Uint8Array.from(atob(s.trim()),c=>c.charCodeAt(0))
 const decode=b=>JSON.parse(new TextDecoder().decode(b))
-let device=JSON.parse(localStorage.getItem('kjw.pair')||'null'),key,rows=[],cats=[],read=false
-const cache=await caches.open('kjw-documents-'+location.pathname.replace(/[^a-z0-9]/gi,'_'))
+let device=JSON.parse(localStorage.getItem('kjw.pair.'+bucket)||'null'),key,rows=[],cats=[],read=false
+const cache=await caches.open('kjw-documents-'+bucket+'-'+location.pathname.replace(/[^a-z0-9]/gi,'_'))
 const cachePath=n=>new URL('./offline/'+n,location.href).href
 function el(tag,text){const n=document.createElement(tag);n.textContent=text;return n}
 function render(){
@@ -42,7 +42,7 @@ async function refresh(){
 }
 $('connect').onclick=async()=>{try{const f=$('file').files[0];if(!f)throw Error('请选择配对文件')
  const b=bytes(await f.text()),p=await passwordKey($('pass').value,b.slice(0,16)),v=decode(await unseal(p,b.slice(16)))
- if(v.type!=='pair-v1')throw Error('文件类型无效');device=v;localStorage.setItem('kjw.pair',JSON.stringify(v));$('pass').value='';$('pair').open=false;await refresh()}catch(e){$('status').textContent='配对失败，请检查文件和口令。'}}
+ if(v.type!=='pair-v1'||v.bucket!==bucket)throw Error('请使用香港版电脑程序导出的配对文件');device=v;localStorage.setItem('kjw.pair.'+bucket,JSON.stringify(v));$('pass').value='';$('pair').open=false;await refresh()}catch(e){$('status').textContent='配对失败，请检查香港版配对文件和口令。'}}
 $('todo').onclick=()=>{read=false;render()};$('done').onclick=()=>{read=true;render()};$('filter').onchange=render
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{})
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh().catch(e=>$('status').textContent=e.message)})

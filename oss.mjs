@@ -4,7 +4,7 @@ async function mac(key,value){
  const k=await crypto.subtle.importKey('raw',key,{name:'HMAC',hash:'SHA-256'},false,['sign'])
  return crypto.subtle.sign('HMAC',k,enc.encode(value))
 }
-export const bucket='kjw-paper-a7f3k9d2',region='cn-beijing'
+export const bucket='kjw-paper-hk-a7f3k9d2',region='cn-hongkong'
 export async function objectRequest(auth,name,method='GET',body){
  const time=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'')
  const day=time.slice(0,8),scope=[day,region,'oss','aliyun_v4_request'].join('/')
@@ -17,7 +17,7 @@ export async function objectRequest(auth,name,method='GET',body){
  for(const part of scope.split('/')) key=await mac(key,part)
  const sig=hex(await mac(key,['OSS4-HMAC-SHA256',time,scope,digest].join('\n')))
  headers.Authorization='OSS4-HMAC-SHA256 Credential='+auth.id+'/'+scope+',Signature='+sig
- const response=await fetch('https://'+(auth.domain||bucket+'.oss-'+region+'.aliyuncs.com')+path,{method,headers,body,cache:'no-store',signal:AbortSignal.timeout(120000)})
+ const response=await fetch('https://'+(bucket+'.oss-'+region+'.aliyuncs.com')+path,{method,headers,body,cache:'no-store',signal:AbortSignal.timeout(120000)})
  if(!response.ok) throw Error('OSS '+response.status+' '+((await response.text()).match(/<Code>([^<]+)/)?.[1]||'请检查权限、设备时间及网络'))
  return response
 }
